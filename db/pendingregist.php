@@ -22,7 +22,7 @@ class PendingRegist {
 		$query = $this->db->prepare('INSERT INTO `*PREFIX*registration`'
 			. ' ( `email`, `token`, `requested` ) VALUES( ?, ?, NOW() )');
 
-		$token = $this->random->generate($this->tokenLength, ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_DIGITS);
+		$token = $this->random->generate($this->tokenLength, ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER . ISecureRandom::CHAR_DIGITS);
 
 		$query->execute(array($email, TokenHasher::hash($token)));
 		return $token;
