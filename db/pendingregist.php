@@ -8,7 +8,7 @@ use OCP\Security\ISecureRandom;
 class PendingRegist {
 
 	private $db;
-	private $tokenLength = 6;
+	private $tokenLength = 12;
 
 	/** @var \OCP\Security\ISecureRandom */
 	protected $random;
