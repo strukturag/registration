@@ -27,13 +27,13 @@ function getEnteredData($key) {
 		</ul>
 		<?php }?>
 		<p class="grouptop">
-		<input type="email" name="email" id="email" value="<?php echo $_['email']; ?>" disabled />
-		<label for="email" class="infield"><?php echo $_['email']; ?></label>
+		<input type="email" name="email" id="email" value="<?php p($_['email']);?>" disabled />
+		<label for="email" class="infield"><?php p($_['email']);?></label>
 		<img id="email-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
 		</p>
 
 		<p class="groupmiddle">
-		<input type="text" name="username" id="username" value="<?php echo getEnteredData('user'); ?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
+		<input type="text" name="username" id="username" value="<?php p(getEnteredData('user'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
 		<label for="username" class="infield"><?php print_unescaped($l->t('Username'));?></label>
 		<img id="username-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
 		</p>
