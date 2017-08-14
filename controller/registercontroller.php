@@ -139,7 +139,8 @@ class RegisterController extends Controller {
 			}
 		}
 
-		// TODO(leon): Data race here, we might already have a pending request -> handle gracefully
+		// TODO(leon): Data race here, we might already have pending requests in the DB
+		// This is (currently) not a problem, but we should still ensure email addresses are unique
 		$token = $this->pendingreg->save($email);
 		try {
 			$this->sendValidationEmail($token, $email);
