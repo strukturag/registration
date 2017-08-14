@@ -4,7 +4,7 @@ if (\OCP\Util::getVersion()[0] >= 12) {
 	\OCP\Util::addStyle('core', 'guest');
 }
 
-function getEnteredData($key) {
+function getEnteredData($_, $key) {
 	if (!isset($_['entered_data'][$key])) {
 		return '';
 	}
@@ -33,7 +33,7 @@ function getEnteredData($key) {
 		</p>
 
 		<p class="groupmiddle">
-		<input type="text" id="username" name="username" value="<?php p(getEnteredData('user'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
+		<input type="text" id="username" name="username" value="<?php p(getEnteredData($_, 'username'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
 		<label for="username" class="infield"><?php print_unescaped($l->t('Username'));?></label>
 		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
 		</p>
