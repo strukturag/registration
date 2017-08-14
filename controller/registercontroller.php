@@ -208,13 +208,14 @@ class RegisterController extends Controller {
 		try {
 			$user = $this->usermanager->createUser($username, $password);
 		} catch (\Exception $e) {
+			\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
 			return new TemplateResponse('registration', 'form',
 				array('email' => $email,
 					'entered_data' => array(
 						'fullname' => $fullname,
 						'username' => $username,
 					),
-					'errormsgs' => array($e->getMessage()),
+					'errormsgs' => $this->l10n->t('Failed to create user account, please contact your administrator.'),
 					'token' => $token), 'guest');
 		}
 		if (!$user) {
