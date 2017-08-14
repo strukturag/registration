@@ -33,6 +33,12 @@ function getEnteredData($_, $key) {
 		</p>
 
 		<p class="groupmiddle">
+		<input type="text" id="fullname" name="fullname" value="<?php p(getEnteredData($_, 'fullname'));?>" placeholder="<?php print_unescaped($l->t('Full name'));?>" />
+		<label for="fullname" class="infield"><?php print_unescaped($l->t('Full name'));?></label>
+		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
+		</p>
+
+		<p class="groupmiddle">
 		<input type="text" id="username" name="username" value="<?php p(getEnteredData($_, 'username'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
 		<label for="username" class="infield"><?php print_unescaped($l->t('Username'));?></label>
 		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>

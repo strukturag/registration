@@ -186,14 +186,30 @@ class RegisterController extends Controller {
 			return $this->getInvalidVerificationURLTemplateResponse();
 		}
 
+		$fullname = $this->request->getParam('fullname');
 		$username = $this->request->getParam('username');
 		$password = $this->request->getParam('password');
+
+		if (empty($fullname)) {
+			return new TemplateResponse('registration', 'form',
+				array('email' => $email,
+					'entered_data' => array(
+						'fullname' => $fullname,
+						'username' => $username,
+					),
+					'errormsgs' => array($this->l10n->t('Your name must not be empty.')),
+					'token' => $token), 'guest');
+		}
+
 		try {
 			$user = $this->usermanager->createUser($username, $password);
 		} catch (\Exception $e) {
 			return new TemplateResponse('registration', 'form',
 				array('email' => $email,
-					'entered_data' => array('username' => $username),
+					'entered_data' => array(
+						'fullname' => $fullname,
+						'username' => $username,
+					),
 					'errormsgs' => array($e->getMessage()),
 					'token' => $token), 'guest');
 		}
@@ -206,6 +222,11 @@ class RegisterController extends Controller {
 			), 'error');
 		}
 		$userId = $user->getUID();
+
+		// Set user display name
+		$fullname = $this->request->getParam('fullname');
+		$user->setDisplayName($fullname);
+
 		// Set user email
 		$user->setEMailAddress($email);
 
