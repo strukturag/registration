@@ -207,16 +207,7 @@ class RegisterController extends Controller {
 		}
 		$userId = $user->getUID();
 		// Set user email
-		try {
-			$this->config->setUserValue($userId, 'settings', 'email', $email);
-		} catch (\Exception $e) {
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('Unable to set user email: ' . $e->getMessage()),
-					'hint' => '',
-				)),
-			), 'error');
-		}
+		$user->setEMailAddress($email);
 
 		// Add user to group
 		$registered_user_group = $this->config->getAppValue($this->appName, 'registered_user_group', 'none');
