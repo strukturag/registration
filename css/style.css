@@ -1,8 +1,10 @@
-#body-login #email, #body-login #username, #body-login #password {
-	width: 223px;
+#body-login input[type="text"],
+#body-login input[type="email"],
+#body-login input[type="password"] {
+	width: 223px !important;
 	padding-left: 36px;
 }
-#email-icon, #username-icon, #password-icon {
+img.icon {
 	position: absolute;
 	left: 16px;
 	top: 22px;
@@ -10,7 +12,7 @@
 	filter: alpha(opacity=30);
 	opacity: .3;
 }
-#username-icon {
+img.icon.username-icon  {
 	top: 17px;
 }
 

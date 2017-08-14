@@ -18,12 +18,12 @@ if ($_['entered']): ?>
 					<li><?php print_unescaped($_['errormsg']);?></li>
 				</ul>
 				<p class="groupofone">
-					<input type="email" name="email" id="email" placeholder="<?php print_unescaped($l->t('Email'));?>" value="" required autofocus />
+					<input type="email" id="email" name="email" placeholder="<?php print_unescaped($l->t('Email'));?>" value="" required autofocus />
 					<label for="email" class="infield"><?php print_unescaped($l->t('Email'));?></label>
-					<img id="email-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
+					<img class="icon email-icon svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
 				</p>
 				<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>" />
-				<input type="submit" id="submit" value="<?php print_unescaped($l->t('Request verification link'));?>" />
+				<input type="submit" value="<?php print_unescaped($l->t('Request verification link'));?>" />
 			</fieldset>
 		</form>
 	<?php endif;?>
@@ -41,12 +41,12 @@ if ($_['entered']): ?>
 				</ul>
 			<?php endif;?>
 			<p class="groupofone">
-			<input type="email" name="email" id="email" placeholder="<?php print_unescaped($l->t('Email'));?>" value="" required autofocus />
+			<input type="email" id="email" name="email" placeholder="<?php print_unescaped($l->t('Email'));?>" value="" required autofocus />
 				<label for="email" class="infield"><?php print_unescaped($l->t('Email'));?></label>
-				<img id="email-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
+				<img class="icon email-icon svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
 			</p>
 			<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']);?>" />
-			<input type="submit" id="submit" value="<?php print_unescaped($l->t('Request verification link'));?>" />
+			<input type="submit" value="<?php print_unescaped($l->t('Request verification link'));?>" />
 		</fieldset>
 	</form>
 <?php endif;?>

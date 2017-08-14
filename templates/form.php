@@ -27,24 +27,25 @@ function getEnteredData($key) {
 		</ul>
 		<?php }?>
 		<p class="grouptop">
-		<input type="email" name="email" id="email" value="<?php p($_['email']);?>" disabled />
+		<input type="email" id="email" name="email" value="<?php p($_['email']);?>" disabled />
 		<label for="email" class="infield"><?php p($_['email']);?></label>
-		<img id="email-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
+		<img class="icon email-icon svg" src="<?php print_unescaped(image_path('', 'actions/mail.svg'));?>" alt=""/>
 		</p>
 
 		<p class="groupmiddle">
-		<input type="text" name="username" id="username" value="<?php p(getEnteredData('user'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
+		<input type="text" id="username" name="username" value="<?php p(getEnteredData('user'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
 		<label for="username" class="infield"><?php print_unescaped($l->t('Username'));?></label>
-		<img id="username-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
+		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
 		</p>
 
 		<p class="groupbottom">
-		<input type="password" name="password" id="password" placeholder="<?php print_unescaped($l->t('Password'));?>"/>
+		<input type="password" id="password" name="password" placeholder="<?php print_unescaped($l->t('Password'));?>"/>
 		<label for="password" class="infield"><?php print_unescaped($l->t('Password'));?></label>
-		<img id="password-icon" class="svg" src="<?php print_unescaped(image_path('', 'actions/password.svg'));?>" alt=""/>
-		<input id="show" name="show" type="checkbox">
+		<img class="icon password-icon svg" src="<?php print_unescaped(image_path('', 'actions/password.svg'));?>" alt=""/>
+		<input type="checkbox" id="show" name="show" />
 		<label style="display: inline;" for="show"></label>
 		</p>
-		<input type="submit" id="submit" value="<?php print_unescaped($l->t('Create account'));?>" />
+
+		<input type="submit" value="<?php print_unescaped($l->t('Create account'));?>" />
 	</fieldset>
 </form>
