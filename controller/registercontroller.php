@@ -216,7 +216,7 @@ class RegisterController extends Controller {
 						'fullname' => $fullname,
 						'username' => $username,
 					),
-					'errormsgs' => $this->l10n->t('Failed to create user account, please contact your administrator.'),
+					'errormsgs' => array($e->getMessage()),
 					'token' => $token), 'guest');
 		}
 		if (!$user) {
