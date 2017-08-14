@@ -43,16 +43,12 @@ class SettingsController extends Controller {
 	 * @return DataResponse
 	 */
 	public function admin($registered_user_group, $allowed_domains) {
-		if (($allowed_domains === '') || ($allowed_domains === NULL)) {
+		if (empty($allowed_domains)) {
 			$this->config->deleteAppValue($this->appName, 'allowed_domains');
 		} else {
 			$this->config->setAppValue($this->appName, 'allowed_domains', $allowed_domains);
 		}
-		$groups = $this->groupmanager->search('');
-		$group_id_list = array();
-		foreach ($groups as $group) {
-			$group_id_list[] = $group->getGid();
-		}
+
 		if ($registered_user_group === 'none') {
 			$this->config->deleteAppValue($this->appName, 'registered_user_group');
 			return new DataResponse(array(
@@ -60,9 +56,16 @@ class SettingsController extends Controller {
 					'message' => (string) $this->l10n->t('Saved'),
 				),
 				'status' => 'success',
-
 			));
-		} elseif (in_array($registered_user_group, $group_id_list)) {
+		}
+
+		// Get all groups
+		$groups = $this->groupmanager->search('');
+		$group_id_list = array();
+		foreach ($groups as $group) {
+			$group_id_list[] = $group->getGid();
+		}
+		if (in_array($registered_user_group, $group_id_list, true)) {
 			$this->config->setAppValue($this->appName, 'registered_user_group', $registered_user_group);
 			return new DataResponse(array(
 				'data' => array(
@@ -70,14 +73,13 @@ class SettingsController extends Controller {
 				),
 				'status' => 'success',
 			));
-		} else {
-			return new DataResponse(array(
-				'data' => array(
-					'message' => (string) $this->l10n->t('No such group'),
-				),
-				'status' => 'error',
-			), Http::STATUS_NOT_FOUND);
 		}
+		return new DataResponse(array(
+			'data' => array(
+				'message' => (string) $this->l10n->t('No such group'),
+			),
+			'status' => 'error',
+		), Http::STATUS_NOT_FOUND);
 	}
 
 	/**
@@ -86,16 +88,18 @@ class SettingsController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function displayPanel() {
+		// Get all groups
 		$groups = $this->groupmanager->search('');
 		foreach ($groups as $group) {
 			$group_id_list[] = $group->getGid();
 		}
 		$current_value = $this->config->getAppValue($this->appName, 'registered_user_group', 'none');
 		$allowed_domains = $this->config->getAppValue($this->appName, 'allowed_domains', '');
-		return new TemplateResponse('registration', 'admin', [
+		return new TemplateResponse('registration', 'admin', array(
 			'groups' => $group_id_list,
 			'current' => $current_value,
 			'allowed' => $allowed_domains,
-		], '');
+		), '');
 	}
+
 }

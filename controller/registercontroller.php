@@ -86,12 +86,15 @@ class RegisterController extends Controller {
 		}
 
 		if ($this->pendingreg->find($email)) {
+			// Delete existing pending registration if we have one
 			$this->pendingreg->delete($email);
+			// .. and create a new one
 			$token = $this->pendingreg->save($email);
 
 			try {
 				$this->sendValidationEmail($token, $email);
 			} catch (\Exception $e) {
+				\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
 				return new TemplateResponse('', 'error', array(
 					'errors' => array(array(
 						'error' => $this->l10n->t('A problem occurred sending email, please contact your administrator.'),
@@ -111,9 +114,7 @@ class RegisterController extends Controller {
 			return new TemplateResponse('', 'error', array(
 				'errors' => array(array(
 					'error' => $this->l10n->t('A user has already taken this email, maybe you already have an account?'),
-					'hint' => str_replace(
-						'{login}', $this->urlgenerator->getAbsoluteURL('/'),
-						$this->l10n->t('You can <a href="{login}">log in now</a>.')),
+					'hint' => '',
 				)),
 			), 'error');
 		}
@@ -131,17 +132,19 @@ class RegisterController extends Controller {
 					break;
 				}
 			}
-			if ($allowed === false) {
-				return new TemplateResponse('registration', 'domains', ['domains' =>
-					$allowed_domains,
-				], 'guest');
+			if (!$allowed) {
+				return new TemplateResponse('registration', 'domains', array(
+					'domains' => $allowed_domains,
+				), 'guest');
 			}
 		}
 
+		// TODO(leon): Data race here, we might already have a pending request -> handle gracefully
 		$token = $this->pendingreg->save($email);
 		try {
 			$this->sendValidationEmail($token, $email);
 		} catch (\Exception $e) {
+			\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
 			return new TemplateResponse('', 'error', array(
 				'errors' => array(array(
 					'error' => $this->l10n->t('A problem occurred sending email, please contact your administrator.'),
@@ -149,8 +152,8 @@ class RegisterController extends Controller {
 				)),
 			), 'error');
 		}
-		return new TemplateResponse('registration', 'message', array('msg' =>
-			$this->l10n->t('Verification email successfully sent.'),
+		return new TemplateResponse('registration', 'message', array(
+			'msg' => $this->l10n->t('Verification email successfully sent.'),
 		), 'guest');
 	}
 
@@ -181,6 +184,7 @@ class RegisterController extends Controller {
 	 * @UseSession
 	 */
 	public function createAccount($token) {
+		// TODO(leon): Cleanup this method -> Move to ajax?
 		$email = $this->pendingreg->findEmailByToken($token);
 		if (!$email) {
 			return $this->getInvalidVerificationURLTemplateResponse();
@@ -237,23 +241,13 @@ class RegisterController extends Controller {
 				$group = $this->groupmanager->get($registered_user_group);
 				$group->addUser($user);
 			} catch (\Exception $e) {
-				return new TemplateResponse('', 'error', array(
-					'errors' => array(array(
-						'error' => $e->message,
-					)),
-				), 'error');
+				\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
 			}
 		}
 
 		// Delete pending reg request
-		$res = $this->pendingreg->delete($email);
-		if ($res === false) {
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('Failed to delete pending registration request'),
-					'hint' => '',
-				)),
-			), 'error');
+		if (!$this->pendingreg->delete($email)) {
+			\OCP\Util::writeLog($this->appName, 'Failed to delete pending registration request for ' . $email, \OCP\Util::ERROR);
 		}
 
 		// Notify admin
@@ -268,7 +262,7 @@ class RegisterController extends Controller {
 		try {
 			$this->sendNewUserNotifEmail($to_arr, $userId);
 		} catch (\Exception $e) {
-			\OCP\Util::writeLog('registration', 'Sending admin notification email failed: ' . $e->getMessage, \OCP\Util::ERROR);
+			\OCP\Util::writeLog($this->appName, 'Sending admin notification email failed: ' . $e->getMessage(), \OCP\Util::ERROR);
 		}
 
 		// Try to log user in
@@ -276,7 +270,8 @@ class RegisterController extends Controller {
 			$this->usersession->login($username, $password);
 			$this->usersession->createSessionToken($this->request, $userId, $username, $password);
 			return new RedirectResponse($this->urlgenerator->linkToRoute('files.view.index'));
-		} elseif (OC_User::login($username, $password)) {
+		}
+		if (OC_User::login($username, $password)) {
 			$this->cleanupLoginTokens($userId);
 			// FIXME unsetMagicInCookie will fail from session already closed, so now we always remember
 			$logintoken = $this->random->generate(32);
@@ -291,6 +286,13 @@ class RegisterController extends Controller {
 					$this->l10n->t('Your account has been successfully created, you can <a href="{link}">log in now</a>.')
 				)), 'guest');
 		}
+
+		return new TemplateResponse('', 'error', array(
+			'errors' => array(array(
+				'error' => 'Failed to log you in. This should never happen.',
+				'hint' => '',
+			)),
+		), 'error');
 	}
 
 	/**
@@ -320,11 +322,11 @@ class RegisterController extends Controller {
 		$message->setSubject($subject);
 		$message->setPlainBody($plaintext_part);
 		$message->setHtmlBody($html_part);
+
 		$failed_recipients = $this->mailer->send($message);
 		if (!empty($failed_recipients)) {
 			throw new \Exception('Failed recipients: ' . print_r($failed_recipients, true));
 		}
-
 	}
 
 	/**
@@ -352,11 +354,11 @@ class RegisterController extends Controller {
 		$message->setSubject($subject);
 		$message->setPlainBody($plaintext_part);
 		$message->setHtmlBody($html_part);
+
 		$failed_recipients = $this->mailer->send($message);
 		if (!empty($failed_recipients)) {
 			throw new \Exception('Failed recipients: ' . print_r($failed_recipients, true));
 		}
-
 	}
 
 	/**
@@ -374,4 +376,5 @@ class RegisterController extends Controller {
 			}
 		}
 	}
+
 }
