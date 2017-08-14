@@ -23,7 +23,7 @@ function getEnteredData($_, $key) {
 		</ul>
 		<?php } else {?>
 		<ul class="msg">
-			<li><?php print_unescaped($l->t('Welcome, you can create your account below.'));?></li>
+			<li><?php p($l->t('Welcome, you can create your account below.'));?></li>
 		</ul>
 		<?php }?>
 		<p class="grouptop">
@@ -33,25 +33,25 @@ function getEnteredData($_, $key) {
 		</p>
 
 		<p class="groupmiddle">
-		<input type="text" id="fullname" name="fullname" value="<?php p(getEnteredData($_, 'fullname'));?>" placeholder="<?php print_unescaped($l->t('Full name'));?>" />
-		<label for="fullname" class="infield"><?php print_unescaped($l->t('Full name'));?></label>
+		<input type="text" id="fullname" name="fullname" value="<?php p(getEnteredData($_, 'fullname'));?>" placeholder="<?php p($l->t('Full name'));?>" />
+		<label for="fullname" class="infield"><?php p($l->t('Full name'));?></label>
 		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
 		</p>
 
 		<p class="groupmiddle">
-		<input type="text" id="username" name="username" value="<?php p(getEnteredData($_, 'username'));?>" placeholder="<?php print_unescaped($l->t('Username'));?>" />
-		<label for="username" class="infield"><?php print_unescaped($l->t('Username'));?></label>
+		<input type="text" id="username" name="username" value="<?php p(getEnteredData($_, 'username'));?>" placeholder="<?php p($l->t('Username'));?>" />
+		<label for="username" class="infield"><?php p($l->t('Username'));?></label>
 		<img class="icon username-icon svg" src="<?php print_unescaped(image_path('', 'actions/user.svg'));?>" alt=""/>
 		</p>
 
 		<p class="groupbottom">
-		<input type="password" id="password" name="password" placeholder="<?php print_unescaped($l->t('Password'));?>"/>
-		<label for="password" class="infield"><?php print_unescaped($l->t('Password'));?></label>
+		<input type="password" id="password" name="password" placeholder="<?php p($l->t('Password'));?>"/>
+		<label for="password" class="infield"><?php p($l->t('Password'));?></label>
 		<img class="icon password-icon svg" src="<?php print_unescaped(image_path('', 'actions/password.svg'));?>" alt=""/>
 		<input type="checkbox" id="show" name="show" />
 		<label style="display: inline;" for="show"></label>
 		</p>
 
-		<input type="submit" value="<?php print_unescaped($l->t('Create account'));?>" />
+		<input type="submit" value="<?php p($l->t('Create account'));?>" />
 	</fieldset>
 </form>
