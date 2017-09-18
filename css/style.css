@@ -28,3 +28,22 @@ img.icon.username-icon  {
 .groupofone {
 	position: relative;
 }
+
+body.success .hide-on-success,
+.hide-unless-success, .hide-unless-error {
+	display: none !important;
+}
+
+body.success .hide-unless-success,
+body.error .hide-unless-error {
+	display: inline-block !important;
+}
+
+.success.msg,
+.error.msg {
+	width: 90%;
+}
+
+input[type="submit"] {
+	width: 269px !important;
+}

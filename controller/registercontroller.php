@@ -11,7 +11,9 @@
 
 namespace OCA\Registration\Controller;
 
+use OCA\Registration\Api\Response as ApiResponse;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Defaults;
@@ -25,7 +27,6 @@ use OCP\Mail\IMailer;
 use OCP\Security\ISecureRandom;
 use OCP\Util;
 use OC_User;
-use OC_Util;
 
 class RegisterController extends Controller {
 
@@ -63,26 +64,32 @@ class RegisterController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	public function askEmail($errormsg, $entered) {
-		$params = array(
-			'errormsg' => $errormsg ? $errormsg : $this->request->getParam('errormsg'),
-			'entered' => $entered ? $entered : $this->request->getParam('entered'),
-		);
-		return new TemplateResponse('registration', 'register', $params, 'guest');
+	public function indexPage() {
+		$params = array();
+		return new TemplateResponse('registration', 'index', $params, 'guest');
+	}
+
+	/**
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function verifyPage($token) {
+		$email = $this->pendingreg->findEmailByToken($token);
+		if (!$email) {
+			$url = $this->urlgenerator->linkToRoute('registration.register.indexPage');
+			return new RedirectResponse($url);
+		}
+		$params = array('token' => $token, 'email' => $email);
+		return new TemplateResponse('registration', 'verify', $params, 'guest');
 	}
 
 	/**
 	 * @PublicPage
 	 */
-	public function validateEmail() {
-		$email = $this->request->getParam('email');
+	public function registerHandler($email) {
 		if (!$this->mailer->validateMailAddress($email)) {
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('The email address you entered is not valid'),
-					'hint' => '',
-				)),
-			), 'error');
+			return (new ApiResponse([], Http::STATUS_UNPROCESSABLE_ENTITY))
+				->setError($this->l10n->t('The email address you entered is not valid'));
 		}
 
 		if ($this->pendingreg->find($email)) {
@@ -95,28 +102,16 @@ class RegisterController extends Controller {
 				$this->sendValidationEmail($token, $email);
 			} catch (\Exception $e) {
 				\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
-				return new TemplateResponse('', 'error', array(
-					'errors' => array(array(
-						'error' => $this->l10n->t('A problem occurred sending email, please contact your administrator.'),
-						'hint' => '',
-					)),
-				), 'error');
+				return $this->getMailDeliveryFailedResponse();
 			}
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('There is already a pending registration with this email, a new verification email has been sent to the address.'),
-					'hint' => '',
-				)),
-			), 'error');
+
+			return (new ApiResponse([], Http::STATUS_CONFLICT))
+				->setError($this->l10n->t('There is already a pending registration with this email, a new verification email has been sent to the address.'));
 		}
 
 		if ($this->config->getUsersForUserValue('settings', 'email', $email)) {
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('A user has already taken this email, maybe you already have an account?'),
-					'hint' => '',
-				)),
-			), 'error');
+			return (new ApiResponse([], Http::STATUS_CONFLICT))
+				->setError($this->l10n->t('A user has already taken this email, maybe you already have an account?'));
 		}
 
 		// allow only from specific email domain
@@ -133,9 +128,8 @@ class RegisterController extends Controller {
 				}
 			}
 			if (!$allowed) {
-				return new TemplateResponse('registration', 'domains', array(
-					'domains' => $allowed_domains,
-				), 'guest');
+				return (new ApiResponse([], Http::STATUS_IM_A_TEAPOT))
+					->setError($this->l10n->t('Email domain is not allowed'));
 			}
 		}
 
@@ -146,91 +140,68 @@ class RegisterController extends Controller {
 			$this->sendValidationEmail($token, $email);
 		} catch (\Exception $e) {
 			\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('A problem occurred sending email, please contact your administrator.'),
-					'hint' => '',
-				)),
-			), 'error');
+			return $this->getMailDeliveryFailedResponse();
 		}
-		return new TemplateResponse('registration', 'message', array(
-			'msg' => $this->l10n->t('Verification email successfully sent.'),
-		), 'guest');
+
+		return (new ApiResponse([], Http::STATUS_OK))
+			->setMessage($this->l10n->t('Verification email successfully sent.'));
 	}
 
-	private function getInvalidVerificationURLTemplateResponse() {
-		return new TemplateResponse('', 'error', array(
-			'errors' => array(array(
-				'error' => $this->l10n->t('Invalid verification URL. No registration request with this verification URL is found.'),
-				'hint' => '',
-			)),
-		), 'error');
+	private function getMailDeliveryFailedResponse() {
+		return (new ApiResponse([], Http::STATUS_INTERNAL_SERVER_ERROR))
+			->setError($this->l10n->t('A problem occurred sending email, please contact your administrator.'));
+	}
+
+	private function getInvalidTokenResponse() {
+		return (new ApiResponse([], Http::STATUS_NOT_FOUND))
+			->setError($this->l10n->t('Verification token not found.'));
 	}
 
 	/**
-	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	public function verifyToken($token) {
+	public function verifyHandler($token) {
 		$email = $this->pendingreg->findEmailByToken($token);
 		if (!$email) {
-			return $this->getInvalidVerificationURLTemplateResponse();
+			return $this->getInvalidTokenResponse();
 		}
 
-		return new TemplateResponse('registration', 'form', array('email' => $email, 'token' => $token), 'guest');
+		return (new ApiResponse([], Http::STATUS_OK))
+			->setAdditional('email', $email);
 	}
 
 	/**
 	 * @PublicPage
 	 * @UseSession
 	 */
-	public function createAccount($token) {
-		// TODO(leon): Cleanup this method -> Move to ajax?
+	public function createAccountHandler($token) {
 		$email = $this->pendingreg->findEmailByToken($token);
 		if (!$email) {
-			return $this->getInvalidVerificationURLTemplateResponse();
+			return $this->getInvalidTokenResponse();
 		}
 
 		$fullname = $this->request->getParam('fullname');
 		$username = $this->request->getParam('username');
 		$password = $this->request->getParam('password');
 
-		if (empty($fullname)) {
-			return new TemplateResponse('registration', 'form',
-				array('email' => $email,
-					'entered_data' => array(
-						'fullname' => $fullname,
-						'username' => $username,
-					),
-					'errormsgs' => array($this->l10n->t('Your name must not be empty.')),
-					'token' => $token), 'guest');
+		if (empty($fullname) || empty($username) || empty($password)) {
+			return (new ApiResponse([], Http::STATUS_UNPROCESSABLE_ENTITY))
+				->setError($this->l10n->t('Missing required parameters.'));
 		}
 
 		try {
 			$user = $this->usermanager->createUser($username, $password);
 		} catch (\Exception $e) {
 			\OCP\Util::logException($this->appName, $e, \OCP\Util::ERROR);
-			return new TemplateResponse('registration', 'form',
-				array('email' => $email,
-					'entered_data' => array(
-						'fullname' => $fullname,
-						'username' => $username,
-					),
-					'errormsgs' => array($e->getMessage()),
-					'token' => $token), 'guest');
+			return (new ApiResponse([], Http::STATUS_INTERNAL_SERVER_ERROR))
+				->setError($this->l10n->t('Failed to create user.'));
 		}
 		if (!$user) {
-			return new TemplateResponse('', 'error', array(
-				'errors' => array(array(
-					'error' => $this->l10n->t('Unable to create user, there are problems with the user backend.'),
-					'hint' => '',
-				)),
-			), 'error');
+			return (new ApiResponse([], Http::STATUS_INTERNAL_SERVER_ERROR))
+				->setError($this->l10n->t('Unable to create user, there are problems with the user backend.'));
 		}
-		$userId = $user->getUID();
 
-		// Set user display name
-		$fullname = $this->request->getParam('fullname');
+		$userId = $user->getUID();
 		$user->setDisplayName($fullname);
 
 		// Set user email
@@ -271,30 +242,16 @@ class RegisterController extends Controller {
 		if (method_exists($this->usersession, 'createSessionToken')) {
 			$this->usersession->login($username, $password);
 			$this->usersession->createSessionToken($this->request, $userId, $username, $password);
-			return new RedirectResponse($this->urlgenerator->linkToRoute('files.view.index'));
-		}
-		if (OC_User::login($username, $password)) {
+		} elseif (OC_User::login($username, $password)) {
 			$this->cleanupLoginTokens($userId);
 			// FIXME unsetMagicInCookie will fail from session already closed, so now we always remember
 			$logintoken = $this->random->generate(32);
 			$this->config->setUserValue($userId, 'login_token', $logintoken, time());
 			OC_User::setMagicInCookie($userId, $logintoken);
-			OC_Util::redirectToDefaultPage();
-
-			// Render message in case redirect failed
-			return new TemplateResponse('registration', 'message', array('msg' =>
-				str_replace('{link}',
-					$this->urlgenerator->getAbsoluteURL('/'),
-					$this->l10n->t('Your account has been successfully created, you can <a href="{link}">log in now</a>.')
-				)), 'guest');
 		}
 
-		return new TemplateResponse('', 'error', array(
-			'errors' => array(array(
-				'error' => 'Failed to log you in. This should never happen.',
-				'hint' => '',
-			)),
-		), 'error');
+		return (new ApiResponse([], Http::STATUS_OK))
+			->setMessage('Account created successfully.');
 	}
 
 	/**
@@ -305,7 +262,7 @@ class RegisterController extends Controller {
 	 * @throws \Exception
 	 */
 	private function sendValidationEmail($token, $to) {
-		$link = $this->urlgenerator->linkToRoute('registration.register.verifyToken', array('token' => $token));
+		$link = $this->urlgenerator->linkToRoute('registration.register.verifyPage', array('token' => $token));
 		$link = $this->urlgenerator->getAbsoluteURL($link);
 		$template_var = [
 			'link' => $link,

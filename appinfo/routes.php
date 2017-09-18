@@ -11,8 +11,11 @@
 
 return ['routes' => [
 	array('name' => 'settings#admin', 'url' => '/settings', 'verb' => 'POST'),
-	array('name' => 'register#askEmail', 'url' => '/', 'verb' => 'GET'),
-	array('name' => 'register#validateEmail', 'url' => '/', 'verb' => 'POST'),
-	array('name' => 'register#verifyToken', 'url' => '/verify/{token}', 'verb' => 'GET'),
-	array('name' => 'register#createAccount', 'url' => '/verify/{token}', 'verb' => 'POST'),
+
+	array('name' => 'register#indexPage', 'url' => '/', 'verb' => 'GET'),
+	array('name' => 'register#verifyPage', 'url' => '/verify/{token}', 'verb' => 'GET'),
+
+	array('name' => 'register#registerHandler', 'url' => '/api/v1/register', 'verb' => 'POST'),
+	array('name' => 'register#verifyHandler', 'url' => '/api/v1/tokens/{token}', 'verb' => 'GET'),
+	array('name' => 'register#createAccountHandler', 'url' => '/api/v1/register/{token}', 'verb' => 'POST'),
 ]];
