@@ -29,6 +29,11 @@ img.icon.username-icon  {
 	position: relative;
 }
 
+body.error,
+body.success {
+	padding: 0 !important;
+}
+
 body.success .hide-on-success,
 .hide-unless-success, .hide-unless-error {
 	display: none !important;
