@@ -94,7 +94,8 @@ class RegisterController extends Controller {
 				$this->registrationService->generateNewToken($reg);
 				$this->mailService->sendTokenByMail($reg);
 				return new TemplateResponse('registration', 'message', array('msg' =>
-					$this->l10n->t('There is already a pending registration with this email, a new verification email has been sent to the address.')
+					$this->l10n->t('There is already a pending registration with this email, a new verification email has been sent to the address.'),
+					'state' => 'email_sent_again',
 				), 'guest');
 			}
 		} catch (RegistrationException $e) {
@@ -103,7 +104,8 @@ class RegisterController extends Controller {
 
 
 		return new TemplateResponse('registration', 'message', array('msg' =>
-			$this->l10n->t('Verification email successfully sent.')
+			$this->l10n->t('Verification email successfully sent.'),
+			'state' => 'email_sent',
 		), 'guest');
 	}
 
@@ -124,7 +126,10 @@ class RegisterController extends Controller {
 			if ($registration->getUsername() !== "" && $registration->getPassword() !== "") {
 				$this->registrationService->createAccount($registration);
 				return new TemplateResponse('registration', 'message',
-					['msg' => $this->l10n->t('Your account has been successfully created, you can <a href="%s">log in now</a>.', [$this->urlgenerator->getAbsoluteURL('/')])],
+					[
+						'msg' => $this->l10n->t('Your account has been successfully created, you can <a href="%s">log in now</a>.', [$this->urlgenerator->getAbsoluteURL('/')]),
+						'state' => 'account_created',
+					],
 					'guest'
 				);
 			}
@@ -209,7 +214,10 @@ class RegisterController extends Controller {
 			return new TemplateResponse(
 				'registration',
 				'message',
-				array('msg' => $this->l10n->t("Your account has been successfully created, but it still needs approval from an administrator.")),
+				array(
+					'msg' => $this->l10n->t("Your account has been successfully created, but it still needs approval from an administrator."),
+					'state' => 'account_created_needs_admin_approval',
+				),
 				'guest');
 		}
 	}
