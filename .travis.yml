@@ -138,7 +138,7 @@ install:
 
 script:
   # Check info.xml schema validity
-  - . ${BUILD_APP_MODULE_DIR}/tests/scripts/lint-appinfo.sh
+  #- . ${BUILD_APP_MODULE_DIR}/tests/scripts/lint-appinfo.sh
 
   # Check PHP syntax errors
   - . ${BUILD_APP_MODULE_DIR}/tests/scripts/lint-php.sh
